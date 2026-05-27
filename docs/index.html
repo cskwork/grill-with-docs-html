@@ -184,9 +184,9 @@
       <h3 class="text-xl font-bold">어댑터 통합 (두 클라이언트를 단일 계층으로)</h3>
     </header>
     <div class="flex flex-wrap gap-2 mb-5">
-      <span class="file-chip bg-stone-100 px-2 py-0.5 rounded text-stone-600">src/adapter/client.py:14</span>
-      <span class="file-chip bg-stone-100 px-2 py-0.5 rounded text-stone-600">src/adapter/legacy_client.py:1</span>
-      <span class="file-chip bg-stone-100 px-2 py-0.5 rounded text-stone-600">tests/test_adapter.py:88</span>
+      <span class="file-chip bg-stone-100 px-2 py-0.5 rounded text-stone-600">&lt;adapter&gt;/ClientA</span>
+      <span class="file-chip bg-stone-100 px-2 py-0.5 rounded text-stone-600">&lt;adapter&gt;/ClientA-Legacy</span>
+      <span class="file-chip bg-stone-100 px-2 py-0.5 rounded text-stone-600">&lt;tests&gt;/AdapterTests</span>
     </div>
 
     <!-- Before / After diagrams -->
@@ -219,10 +219,10 @@
     <div class="panel-facts p-4 rounded-xl mb-5">
       <p class="panel-label">FACTS — 현재 코드 실태</p>
       <ul class="list-disc list-inside text-sm text-stone-700 mt-2 space-y-1">
-        <li><span class="file-chip">client.py:14</span> — <code class="code">BASE_URL = "https://api.internal/v2"</code></li>
-        <li><span class="file-chip">legacy_client.py:1</span> — <code class="code">BASE_URL = "https://api.internal/v1"</code> (하드코딩, 환경 변수 없음)</li>
-        <li><span class="file-chip">tests/test_adapter.py:88</span> — 두 클라이언트를 각각 모킹, 중복 18줄</li>
-        <li><strong>핵심 신호</strong>: v1 엔드포인트 폐기 예정. 두 클라이언트를 따로 업데이트하면 누락 위험.</li>
+        <li><span class="file-chip">ClientA</span> — 외부 endpoint 상수 하드코딩, 환경 분기 없음</li>
+        <li><span class="file-chip">ClientA-Legacy</span> — 동일 패턴, 다른 endpoint 상수 (하드코딩)</li>
+        <li><span class="file-chip">AdapterTests</span> — 두 클라이언트를 각각 모킹, 셋업 코드 중복</li>
+        <li><strong>핵심 신호</strong>: 구버전 변형이 폐기 일정에 올라가 있어, 두 클라이언트를 따로 업데이트하면 누락 위험.</li>
       </ul>
     </div>
 
@@ -253,7 +253,7 @@
           <span class="opt-marker"></span>
           <span>
             <span class="text-sm"><strong>(c)</strong> 현상 유지 (두 클라이언트 병존)</span>
-            <div class="trade-off">장점: 변경 없음. 단점: v1 폐기 후 런타임 오류 직접 노출.</div>
+            <div class="trade-off">장점: 변경 없음. 단점: 구버전 폐기 후 런타임 오류 직접 노출.</div>
           </span>
         </label>
       </div>
@@ -263,7 +263,7 @@
           <strong>Deletion test:</strong> LegacyAdapter를 삭제해도 도메인 동작이 유지되어야 합니다.
           옵션 (a)는 단일 어댑터가 그 계약을 흡수하므로 삭제 테스트를 통과합니다.
           (b)는 중간 레이어를 추가하지만 "언제 지울 것인가"를 미결로 둡니다.
-          v1 폐기 기한이 명확하므로 지금 결정하는 것이 타당합니다.
+          구버전 폐기 기한이 명확하므로 지금 결정하는 것이 타당합니다.
         </p>
       </div>
       <textarea name="demo_d1_1_note" rows="2" placeholder="메모 (선택)" class="mt-3 w-full border border-stone-200 rounded-lg p-2 text-sm code resize-none focus:outline-none focus:ring-1 focus:ring-emerald-400"></textarea>
@@ -273,9 +273,9 @@
     <div class="panel-note p-4 rounded-xl">
       <p class="panel-label">SIDE EFFECTS — 결정 확정 시 같이 처리</p>
       <ul class="list-disc list-inside text-sm text-stone-700 mt-2 space-y-1">
-        <li>CONTEXT.md 추가 — <code class="code">Adapter</code>, <code class="code">v1-deprecation</code></li>
+        <li>CONTEXT.md 추가 — <code class="code">Adapter</code>, <code class="code">legacy-retirement</code></li>
         <li>ADR 후보 — D1.1 (외부 API 버전 전환 정책)</li>
-        <li>테스트 계약 — <code class="code">tests/test_adapter.py</code> mock 통합, 중복 18줄 제거</li>
+        <li>테스트 계약 — <code class="code">AdapterTests</code> mock 통합, 셋업 중복 제거</li>
       </ul>
     </div>
   </div>
