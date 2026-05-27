@@ -181,12 +181,12 @@
   <div class="bg-white border border-stone-200 rounded-2xl p-6 mb-6">
     <header class="flex items-center gap-3 mb-3">
       <span class="badge-strong px-3 py-1 rounded-full text-xs font-semibold">Strong · C01</span>
-      <h3 class="text-xl font-bold">Sympy 클라이언트 통합</h3>
+      <h3 class="text-xl font-bold">어댑터 통합 (두 클라이언트를 단일 계층으로)</h3>
     </header>
     <div class="flex flex-wrap gap-2 mb-5">
-      <span class="file-chip bg-stone-100 px-2 py-0.5 rounded text-stone-600">src/sympy/client.py:14</span>
-      <span class="file-chip bg-stone-100 px-2 py-0.5 rounded text-stone-600">src/sympy/legacy_client.py:1</span>
-      <span class="file-chip bg-stone-100 px-2 py-0.5 rounded text-stone-600">tests/test_sympy.py:88</span>
+      <span class="file-chip bg-stone-100 px-2 py-0.5 rounded text-stone-600">src/adapter/client.py:14</span>
+      <span class="file-chip bg-stone-100 px-2 py-0.5 rounded text-stone-600">src/adapter/legacy_client.py:1</span>
+      <span class="file-chip bg-stone-100 px-2 py-0.5 rounded text-stone-600">tests/test_adapter.py:88</span>
     </div>
 
     <!-- Before / After diagrams -->
@@ -194,9 +194,9 @@
       <div class="diag-before">
         <p class="diag-label">BEFORE — 두 클라이언트가 병렬 존재</p>
         <div class="mermaid">flowchart TB
-  A["SymPy API"] --> B["client.py"]
-  A --> C["legacy_client.py"]
-  B --> D["Domain Service"]
+  A["External API"] --> B["NewAdapter"]
+  A --> C["LegacyAdapter"]
+  B --> D["Service"]
   C --> D
   classDef old fill:#fef2f2,stroke:#ef4444
   classDef svc fill:#f5f5f4,stroke:#a8a29e
@@ -206,8 +206,8 @@
       <div class="diag-after">
         <p class="diag-label">AFTER — 단일 어댑터 계층</p>
         <div class="mermaid">flowchart TB
-  A["SymPy API"] --> U["SymPyAdapter"]
-  U --> D["Domain Service"]
+  A["External API"] --> U["Adapter"]
+  U --> D["Service"]
   classDef new fill:#ecfdf5,stroke:#10b981
   classDef svc fill:#f5f5f4,stroke:#a8a29e
   class U new
@@ -219,10 +219,10 @@
     <div class="panel-facts p-4 rounded-xl mb-5">
       <p class="panel-label">FACTS — 현재 코드 실태</p>
       <ul class="list-disc list-inside text-sm text-stone-700 mt-2 space-y-1">
-        <li><span class="file-chip">client.py:14</span> — <code class="code">BASE_URL = "https://sympy.internal/v2"</code></li>
-        <li><span class="file-chip">legacy_client.py:1</span> — <code class="code">BASE_URL = "https://sympy.internal/v1"</code> (하드코딩, 환경 변수 없음)</li>
-        <li><span class="file-chip">tests/test_sympy.py:88</span> — 두 클라이언트를 각각 모킹, 중복 18줄</li>
-        <li><strong>핵심 신호</strong>: v1 엔드포인트 폐기 예정 (2025-Q3). 두 클라이언트를 따로 업데이트하면 누락 위험.</li>
+        <li><span class="file-chip">client.py:14</span> — <code class="code">BASE_URL = "https://api.internal/v2"</code></li>
+        <li><span class="file-chip">legacy_client.py:1</span> — <code class="code">BASE_URL = "https://api.internal/v1"</code> (하드코딩, 환경 변수 없음)</li>
+        <li><span class="file-chip">tests/test_adapter.py:88</span> — 두 클라이언트를 각각 모킹, 중복 18줄</li>
+        <li><strong>핵심 신호</strong>: v1 엔드포인트 폐기 예정. 두 클라이언트를 따로 업데이트하면 누락 위험.</li>
       </ul>
     </div>
 
@@ -236,7 +236,7 @@
           <input type="radio" name="demo_d1_1" value="a" checked class="hidden">
           <span class="opt-marker"></span>
           <span>
-            <span class="text-sm"><strong>(a)</strong> 새 <code class="code">SymPyAdapter</code> 클래스로 통합, legacy 삭제<span class="recommended">권장</span></span>
+            <span class="text-sm"><strong>(a)</strong> 단일 어댑터(Single Adapter with two methods)로 통합, 레거시 삭제<span class="recommended">권장</span></span>
             <div class="trade-off">장점: 단일 진실 원천. 단점: 단기 마이그레이션 비용 발생.</div>
           </span>
         </label>
@@ -244,7 +244,7 @@
           <input type="radio" name="demo_d1_1" value="b" class="hidden">
           <span class="opt-marker"></span>
           <span>
-            <span class="text-sm"><strong>(b)</strong> legacy를 <code class="code">SymPyAdapter</code>로 리다이렉트</span>
+            <span class="text-sm"><strong>(b)</strong> Two separate Adapters 유지, 레거시를 새 어댑터로 리다이렉트</span>
             <div class="trade-off">장점: 즉각 무중단. 단점: 중복 레이어 영구화, 삭제 시점 불명확.</div>
           </span>
         </label>
@@ -260,8 +260,8 @@
       <div class="panel-why p-3 rounded-xl mt-4">
         <p class="panel-label">WHY — (a) 권장</p>
         <p class="text-sm text-stone-700 mt-1">
-          <strong>Deletion test:</strong> legacy_client.py를 삭제해도 도메인 동작이 유지되어야 합니다.
-          옵션 (a)는 어댑터가 그 계약을 흡수하므로 삭제 테스트를 통과합니다.
+          <strong>Deletion test:</strong> LegacyAdapter를 삭제해도 도메인 동작이 유지되어야 합니다.
+          옵션 (a)는 단일 어댑터가 그 계약을 흡수하므로 삭제 테스트를 통과합니다.
           (b)는 중간 레이어를 추가하지만 "언제 지울 것인가"를 미결로 둡니다.
           v1 폐기 기한이 명확하므로 지금 결정하는 것이 타당합니다.
         </p>
@@ -273,9 +273,9 @@
     <div class="panel-note p-4 rounded-xl">
       <p class="panel-label">SIDE EFFECTS — 결정 확정 시 같이 처리</p>
       <ul class="list-disc list-inside text-sm text-stone-700 mt-2 space-y-1">
-        <li>CONTEXT.md 추가 — <code class="code">SymPyAdapter</code>, <code class="code">v1-deprecation</code></li>
+        <li>CONTEXT.md 추가 — <code class="code">Adapter</code>, <code class="code">v1-deprecation</code></li>
         <li>ADR 후보 — D1.1 (외부 API 버전 전환 정책)</li>
-        <li>테스트 계약 — <code class="code">tests/test_sympy.py</code> mock 통합, 중복 18줄 제거</li>
+        <li>테스트 계약 — <code class="code">tests/test_adapter.py</code> mock 통합, 중복 18줄 제거</li>
       </ul>
     </div>
   </div>
@@ -398,8 +398,14 @@ ls /tmp/mermaid-validate/*.svg 2&gt;&amp;1 | wc -l   <span class="comment"># 추
     Node.js + npx가 필요합니다 (Mermaid 검증용). 첫 실행 시 <code class="code text-stone-700">@mermaid-js/mermaid-cli</code>를 자동 설치합니다.
     <code class="code text-stone-700">grill-with-docs</code> 스킬도 함께 필요합니다.
   </p>
-  <pre class="code-block"><span class="comment"># 이 스킬 설치</span>
-git clone https://github.com/cskwork/grill-with-docs-html ~/.claude/skills/grill-with-docs-html
+  <pre class="code-block"><span class="comment"># 옵션 A — sparse 클론 (스킬만)</span>
+mkdir -p ~/.claude/skills/grill-with-docs-html
+curl -sL https://github.com/cskwork/grill-with-docs-html/archive/main.tar.gz | \
+  tar -xz --strip-components=2 -C ~/.claude/skills/grill-with-docs-html grill-with-docs-html-main/skill
+
+<span class="comment"># 옵션 B — 전체 클론 후 심볼릭 링크</span>
+git clone https://github.com/cskwork/grill-with-docs-html ~/code/grill-with-docs-html
+ln -s ~/code/grill-with-docs-html/skill ~/.claude/skills/grill-with-docs-html
 
 <span class="comment"># grill-with-docs 가 없다면</span>
 git clone https://github.com/obra/grill-with-docs ~/.claude/skills/grill-with-docs</pre>
@@ -479,19 +485,19 @@ git clone https://github.com/obra/grill-with-docs ~/.claude/skills/grill-with-do
       </thead>
       <tbody class="divide-y divide-stone-100">
         <tr>
-          <td class="px-4 py-3"><code class="code text-stone-700">SKILL.md</code></td>
+          <td class="px-4 py-3"><code class="code text-stone-700">skill/SKILL.md</code></td>
           <td class="px-4 py-3 text-stone-600">스킬 진입점 — 인터뷰 순서, HTML 내보내기 조건, skip 규칙</td>
         </tr>
         <tr>
-          <td class="px-4 py-3"><code class="code text-stone-700">HTML-FORM.md</code></td>
+          <td class="px-4 py-3"><code class="code text-stone-700">skill/HTML-FORM.md</code></td>
           <td class="px-4 py-3 text-stone-600">자체 완결 HTML 폼 템플릿 (Tailwind CDN, Mermaid CDN, Pretendard 폰트)</td>
         </tr>
         <tr>
-          <td class="px-4 py-3"><code class="code text-stone-700">MERMAID-SAFE-SUBSET.md</code></td>
+          <td class="px-4 py-3"><code class="code text-stone-700">skill/MERMAID-SAFE-SUBSET.md</code></td>
           <td class="px-4 py-3 text-stone-600">mmdc 렌더링 안전 부분집합 — 금지 패턴 목록 및 허용 문법</td>
         </tr>
         <tr>
-          <td class="px-4 py-3"><code class="code text-stone-700">VALIDATION.md</code></td>
+          <td class="px-4 py-3"><code class="code text-stone-700">skill/VALIDATION.md</code></td>
           <td class="px-4 py-3 text-stone-600">Mermaid 블록 추출·검증 스니펫 (mmdc 파이프라인)</td>
         </tr>
         <tr>
@@ -531,7 +537,7 @@ git clone https://github.com/obra/grill-with-docs ~/.claude/skills/grill-with-do
 <script>
 /* Install copy button */
 document.getElementById('copy-install').addEventListener('click', async () => {
-  const cmd = 'git clone https://github.com/cskwork/grill-with-docs-html ~/.claude/skills/grill-with-docs-html';
+  const cmd = 'mkdir -p ~/.claude/skills/grill-with-docs-html && curl -sL https://github.com/cskwork/grill-with-docs-html/archive/main.tar.gz | tar -xz --strip-components=2 -C ~/.claude/skills/grill-with-docs-html grill-with-docs-html-main/skill';
   try {
     await navigator.clipboard.writeText(cmd);
   } catch (e) {
@@ -551,12 +557,16 @@ document.getElementById('copy-install').addEventListener('click', async () => {
 function buildDemoDecision() {
   const r = document.querySelector('input[name="demo_d1_1"]:checked');
   const val = r ? r.value : 'a';
-  const labels = { a: '(a) 새 SymPyAdapter 클래스로 통합, legacy 삭제', b: '(b) legacy를 SymPyAdapter로 리다이렉트', c: '(c) 현상 유지' };
+  const labels = {
+    a: '(a) 단일 어댑터(Single Adapter with two methods)로 통합, 레거시 삭제',
+    b: '(b) Two separate Adapters 유지, 레거시를 새 어댑터로 리다이렉트',
+    c: '(c) 현상 유지'
+  };
   const note = document.querySelector('textarea[name="demo_d1_1_note"]').value.trim();
   const lines = [
     '# 결정',
     '',
-    '## C01 — Sympy 클라이언트 통합',
+    '## C01 — 어댑터 통합 (두 클라이언트를 단일 계층으로)',
     `- **D1.1** — ${labels[val] || val}`,
     note ? `  - 메모: ${note}` : null,
     '',

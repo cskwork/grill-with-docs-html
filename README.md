@@ -3,6 +3,10 @@
 `grill-with-docs`의 기본(default) HTML 폼 출력 변형 스킬입니다.
 같은 Socratic 인터뷰로 플랜을 검증하면서, 결정 트리를 언제나 인터랙티브 HTML 폼으로 내보냅니다.
 
+## 랜딩 페이지 (Landing page)
+
+[https://cskwork.github.io/grill-with-docs-html/](https://cskwork.github.io/grill-with-docs-html/)
+
 ## 이 스킬이 하는 일
 
 - CONTEXT.md / ADR 기반 Socratic 인터뷰로 플랜·후보를 검증합니다 (grill-with-docs와 동일)
@@ -22,7 +26,14 @@
 ## 설치
 
 ```bash
-git clone https://github.com/cskwork/grill-with-docs-html ~/.claude/skills/grill-with-docs-html
+# 옵션 A — sparse 클론 (스킬만)
+mkdir -p ~/.claude/skills/grill-with-docs-html
+curl -sL https://github.com/cskwork/grill-with-docs-html/archive/main.tar.gz | \
+  tar -xz --strip-components=2 -C ~/.claude/skills/grill-with-docs-html grill-with-docs-html-main/skill
+
+# 옵션 B — 전체 클론 후 심볼릭 링크
+git clone https://github.com/cskwork/grill-with-docs-html ~/code/grill-with-docs-html
+ln -s ~/code/grill-with-docs-html/skill ~/.claude/skills/grill-with-docs-html
 ```
 
 `grill-with-docs` 스킬도 함께 필요합니다:
@@ -48,10 +59,11 @@ git clone https://github.com/obra/grill-with-docs ~/.claude/skills/grill-with-do
 
 | 파일 | 역할 |
 |------|------|
-| `SKILL.md` | 스킬 진입점 — 인터뷰 순서, HTML 내보내기 조건, skip 규칙 |
-| `HTML-FORM.md` | 자체 완결 HTML 폼 템플릿 (Tailwind CDN, Mermaid CDN, Pretendard 폰트) |
-| `MERMAID-SAFE-SUBSET.md` | mmdc 렌더링 안전 부분집합 — 금지 패턴 목록 및 허용 문법 |
-| `VALIDATION.md` | Mermaid 블록 추출·검증 스니펫 (mmdc 파이프라인) |
+| `skill/SKILL.md` | 스킬 진입점 — 인터뷰 순서, HTML 내보내기 조건, skip 규칙 |
+| `skill/HTML-FORM.md` | 자체 완결 HTML 폼 템플릿 (Tailwind CDN, Mermaid CDN, Pretendard 폰트) |
+| `skill/MERMAID-SAFE-SUBSET.md` | mmdc 렌더링 안전 부분집합 — 금지 패턴 목록 및 허용 문법 |
+| `skill/VALIDATION.md` | Mermaid 블록 추출·검증 스니펫 (mmdc 파이프라인) |
+| `docs/index.html` | 랜딩 페이지 (GitHub Pages 제공) |
 
 ## 예시 출력
 
