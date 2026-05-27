@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>grill-with-docs-html — 결정 트리를 HTML 폼으로</title>
+<meta name="description" content="grill-with-docs의 HTML 폼 출력 변형. Socratic 인터뷰 + FACTS/WHY/Mermaid 다이어그램 + 클립보드 결정 텍스트." />
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({ startOnLoad: true, theme: "neutral", securityLevel: "loose", flowchart: { curve: "basis" }, themeVariables: { fontSize: "13px" } });
+</script>
+<link rel="preconnect" href="https://cdn.jsdelivr.net/npm/@fontsource/pretendard@5/index.css" />
+<style>
+  @import url('https://cdn.jsdelivr.net/npm/@fontsource/pretendard@5/index.css');
+  body { font-family: "Pretendard", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+
+  /* Panel system — matches skill output */
+  .panel-facts  { background:#fafaf9; border:1px solid #e7e5e4; border-left:3px solid #57534e; }
+  .panel-why    { background:#ecfdf5; border:1px solid #a7f3d0; border-left:3px solid #10b981; }
+  .panel-note   { background:#fffbeb; border:1px solid #fde68a; border-left:3px solid #f59e0b; }
+  .panel-context{ background:#f5f3ff; border:1px solid #ddd6fe; border-left:3px solid #8b5cf6; }
+  .panel-label  { font-size:0.65rem; letter-spacing:0.12em; font-weight:700; text-transform:uppercase; color:#44403c; }
+  .panel-why .panel-label   { color:#065f46; }
+  .panel-note .panel-label  { color:#92400e; }
+  .panel-context .panel-label { color:#5b21b6; }
+
+  /* Option cards */
+  .opt-card { transition: background 120ms, border-color 120ms; }
+  .opt-card:has(input:checked) { background:#ecfdf5; border-color:#10b981; }
+  .opt-card:has(input:checked) .opt-marker { background:#10b981; border-color:#10b981; }
+  .opt-card:has(input:checked) .opt-marker::after { opacity:1; }
+  .opt-marker { position:relative; width:1rem; height:1rem; border-radius:9999px; border:2px solid #d1d5db; display:inline-block; flex-shrink:0; margin-top:0.2rem; }
+  .opt-marker::after { content:""; position:absolute; inset:3px; border-radius:9999px; background:#fff; opacity:0; }
+  .recommended { background:#10b98122; color:#065f46; padding:0 5px; border-radius:5px; font-size:0.7rem; font-weight:700; margin-left:0.4rem; vertical-align:middle; }
+  .trade-off { color:#57534e; font-size:0.8rem; margin-top:0.2rem; }
+
+  /* Mermaid panels */
+  .mermaid { background:#fafafa; border:1px solid #e7e5e4; border-radius:10px; padding:0.75rem; font-size:0.82rem; overflow:auto; }
+  .diag-label { font-size:0.68rem; letter-spacing:0.12em; font-weight:700; color:#57534e; margin-bottom:0.3rem; }
+  .diag-before .mermaid { border-left:3px solid #ef4444; background:#fef2f2; }
+  .diag-after  .mermaid { border-left:3px solid #10b981; background:#ecfdf5; }
+
+  /* Code / file chips */
+  .file-chip, .code { font-family: ui-monospace, "JetBrains Mono", "SF Mono", monospace; font-size:0.73rem; }
+  .badge-strong { background:#1f2937; color:#fff; }
+
+  /* Comparison table */
+  .cmp-row td { vertical-align:top; }
+  .cmp-check { color:#10b981; font-weight:700; }
+  .cmp-dash  { color:#a8a29e; }
+
+  /* Sticky footer bar */
+  .sticky-bar { position:sticky; bottom:1.25rem; z-index:20; }
+
+  /* Section divider */
+  .section-rule { border:none; border-top:1px solid #e7e5e4; margin:3rem 0; }
+
+  /* Anchor-linked section headers */
+  .sec-label { font-size:0.65rem; letter-spacing:0.14em; font-weight:700; text-transform:uppercase; color:#10b981; margin-bottom:0.4rem; }
+
+  /* Code block */
+  pre.code-block { background:#1c1917; color:#d6d3d1; border-radius:10px; padding:1rem 1.25rem; font-size:0.78rem; overflow-x:auto; font-family: ui-monospace, "JetBrains Mono", "SF Mono", monospace; line-height:1.6; }
+  pre.code-block .hl { color:#6ee7b7; }
+  pre.code-block .comment { color:#78716c; }
+
+  /* Smooth scroll */
+  html { scroll-behavior: smooth; }
+
+  /* Nav */
+  nav a { transition: color 120ms; }
+  nav a:hover { color: #10b981; }
+</style>
+</head>
+<body class="bg-stone-50 text-stone-900">
+
+<!-- ====== NAV ====== -->
+<nav class="sticky top-0 z-30 bg-stone-50/90 backdrop-blur border-b border-stone-200">
+  <div class="max-w-5xl mx-auto px-6 py-3 flex items-center justify-between">
+    <span class="font-mono text-sm font-bold text-stone-700">grill-with-docs-html</span>
+    <div class="hidden sm:flex gap-5 text-xs text-stone-500 font-medium">
+      <a href="#sample" class="hover:text-stone-900">라이브 샘플</a>
+      <a href="#panels" class="hover:text-stone-900">패널 규칙</a>
+      <a href="#validation" class="hover:text-stone-900">검증 게이트</a>
+      <a href="#install" class="hover:text-stone-900">설치</a>
+      <a href="#relation" class="hover:text-stone-900">구조</a>
+    </div>
+    <a href="https://github.com/cskwork/grill-with-docs-html" target="_blank" rel="noopener"
+       class="text-xs font-semibold bg-stone-900 text-white px-3 py-1.5 rounded-lg hover:bg-stone-700 transition-colors">
+      GitHub
+    </a>
+  </div>
+</nav>
+
+<!-- ====== HERO ====== -->
+<header class="max-w-5xl mx-auto px-6 pt-20 pb-16">
+  <p class="sec-label">Claude Code Skill</p>
+  <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight leading-tight text-stone-900 mb-4">
+    그릴링(Grilling),<br>결정 트리를<br><span style="color:#10b981">HTML 폼으로.</span>
+  </h1>
+  <p class="text-lg text-stone-600 mb-2 max-w-2xl">
+    <code class="file-chip bg-stone-100 px-1.5 py-0.5 rounded">grill-with-docs</code>의 기본 HTML 폼 출력 변형.
+    같은 Socratic 인터뷰로 플랜을 검증하면서, 결정이 3개 이상 누적되면 인터랙티브 HTML 폼을 자동 생성합니다.
+  </p>
+  <p class="text-sm text-stone-400 mb-10">
+    Default HTML form variant of the <em>grill-with-docs</em> Claude Code skill — exports structured decision trees with FACTS, WHY, Mermaid diagrams, and a clipboard copy button.
+  </p>
+  <div class="flex flex-wrap gap-3">
+    <a href="https://github.com/cskwork/grill-with-docs-html" target="_blank" rel="noopener"
+       class="inline-flex items-center gap-2 bg-stone-900 text-white px-5 py-2.5 rounded-xl font-semibold text-sm hover:bg-stone-700 transition-colors">
+      GitHub에서 보기
+    </a>
+    <button id="copy-install"
+       class="inline-flex items-center gap-2 bg-white border border-stone-300 text-stone-700 px-5 py-2.5 rounded-xl font-semibold text-sm hover:border-emerald-400 hover:text-emerald-700 transition-colors">
+      설치 명령 복사
+    </button>
+  </div>
+  <p id="copy-confirm" class="text-xs text-emerald-600 font-semibold mt-3 opacity-0 transition-opacity">복사됨 — 터미널에 붙여넣으세요.</p>
+</header>
+
+<hr class="section-rule max-w-5xl mx-auto" />
+
+<!-- ====== TL;DR — 무엇이 다른가 ====== -->
+<section class="max-w-5xl mx-auto px-6 pb-16" id="tldr">
+  <p class="sec-label">TL;DR</p>
+  <h2 class="text-2xl font-bold mb-2">무엇이 다른가</h2>
+  <p class="text-stone-500 text-sm mb-8">
+    <code class="file-chip">grill-with-docs</code>는 채팅 안에서 결정을 내립니다.
+    이 스킬은 그 결정을 <strong>구조화된 HTML 폼</strong>으로 내보내, 나란히 비교하고 클립보드로 복사할 수 있게 합니다.
+  </p>
+  <div class="grid sm:grid-cols-3 gap-4">
+    <div class="bg-white border border-stone-200 rounded-2xl p-5">
+      <p class="text-xs uppercase tracking-widest text-stone-400 mb-2 font-semibold">Vanilla grilling</p>
+      <ul class="text-sm text-stone-600 space-y-2">
+        <li>채팅 내 Socratic 인터뷰</li>
+        <li>CONTEXT.md / ADR 기반 질문</li>
+        <li>텍스트 권장 답변</li>
+        <li class="text-stone-400">— FACTS 패널 없음</li>
+        <li class="text-stone-400">— 다이어그램 없음</li>
+        <li class="text-stone-400">— 폼 내보내기 없음</li>
+      </ul>
+    </div>
+    <div class="bg-white border border-emerald-200 rounded-2xl p-5 relative">
+      <span class="absolute top-3 right-3 text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full font-semibold">이 스킬 추가</span>
+      <p class="text-xs uppercase tracking-widest text-emerald-700 mb-2 font-semibold">+HTML Form 레이어</p>
+      <ul class="text-sm text-stone-700 space-y-2">
+        <li><span class="cmp-check">+</span> FACTS 패널 (파일·라인·상수·신호)</li>
+        <li><span class="cmp-check">+</span> Before / After Mermaid 다이어그램</li>
+        <li><span class="cmp-check">+</span> 선택지별 trade-off + WHY 패널</li>
+        <li><span class="cmp-check">+</span> SIDE EFFECTS 패널</li>
+        <li><span class="cmp-check">+</span> 결정 텍스트 생성 + 클립보드 복사</li>
+        <li><span class="cmp-check">+</span> mmdc 다이어그램 검증 게이트</li>
+      </ul>
+    </div>
+    <div class="bg-white border border-stone-200 rounded-2xl p-5">
+      <p class="text-xs uppercase tracking-widest text-stone-400 mb-2 font-semibold">동일하게 유지</p>
+      <ul class="text-sm text-stone-600 space-y-2">
+        <li>인터뷰 행동 전체</li>
+        <li>CONTEXT.md 발견 + 업데이트</li>
+        <li>ADR 제안 (조건부)</li>
+        <li>용어 다듬기 (glossary)</li>
+        <li>스킵 규칙 (결정 3개 미만)</li>
+        <li>언어 규칙 (LANGUAGE.md)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<hr class="section-rule max-w-5xl mx-auto" />
+
+<!-- ====== LIVE SAMPLE ====== -->
+<section class="max-w-5xl mx-auto px-6 pb-16" id="sample">
+  <p class="sec-label">Live Sample</p>
+  <h2 class="text-2xl font-bold mb-1">한 카드의 모양</h2>
+  <p class="text-stone-500 text-sm mb-8">
+    실제 스킬이 생성하는 HTML 폼의 구성 요소입니다. 라디오 버튼을 클릭해 보세요.
+  </p>
+
+  <!-- Sample candidate card -->
+  <div class="bg-white border border-stone-200 rounded-2xl p-6 mb-6">
+    <header class="flex items-center gap-3 mb-3">
+      <span class="badge-strong px-3 py-1 rounded-full text-xs font-semibold">Strong · C01</span>
+      <h3 class="text-xl font-bold">Sympy 클라이언트 통합</h3>
+    </header>
+    <div class="flex flex-wrap gap-2 mb-5">
+      <span class="file-chip bg-stone-100 px-2 py-0.5 rounded text-stone-600">src/sympy/client.py:14</span>
+      <span class="file-chip bg-stone-100 px-2 py-0.5 rounded text-stone-600">src/sympy/legacy_client.py:1</span>
+      <span class="file-chip bg-stone-100 px-2 py-0.5 rounded text-stone-600">tests/test_sympy.py:88</span>
+    </div>
+
+    <!-- Before / After diagrams -->
+    <div class="grid md:grid-cols-2 gap-4 mb-5">
+      <div class="diag-before">
+        <p class="diag-label">BEFORE — 두 클라이언트가 병렬 존재</p>
+        <div class="mermaid">flowchart TB
+  A["SymPy API"] --> B["client.py"]
+  A --> C["legacy_client.py"]
+  B --> D["Domain Service"]
+  C --> D
+  classDef old fill:#fef2f2,stroke:#ef4444
+  classDef svc fill:#f5f5f4,stroke:#a8a29e
+  class B,C old
+  class D svc</div>
+      </div>
+      <div class="diag-after">
+        <p class="diag-label">AFTER — 단일 어댑터 계층</p>
+        <div class="mermaid">flowchart TB
+  A["SymPy API"] --> U["SymPyAdapter"]
+  U --> D["Domain Service"]
+  classDef new fill:#ecfdf5,stroke:#10b981
+  classDef svc fill:#f5f5f4,stroke:#a8a29e
+  class U new
+  class D svc</div>
+      </div>
+    </div>
+
+    <!-- FACTS panel -->
+    <div class="panel-facts p-4 rounded-xl mb-5">
+      <p class="panel-label">FACTS — 현재 코드 실태</p>
+      <ul class="list-disc list-inside text-sm text-stone-700 mt-2 space-y-1">
+        <li><span class="file-chip">client.py:14</span> — <code class="code">BASE_URL = "https://sympy.internal/v2"</code></li>
+        <li><span class="file-chip">legacy_client.py:1</span> — <code class="code">BASE_URL = "https://sympy.internal/v1"</code> (하드코딩, 환경 변수 없음)</li>
+        <li><span class="file-chip">tests/test_sympy.py:88</span> — 두 클라이언트를 각각 모킹, 중복 18줄</li>
+        <li><strong>핵심 신호</strong>: v1 엔드포인트 폐기 예정 (2025-Q3). 두 클라이언트를 따로 업데이트하면 누락 위험.</li>
+      </ul>
+    </div>
+
+    <!-- Decision D1.1 -->
+    <div class="border border-stone-200 rounded-2xl p-5 mb-4">
+      <p class="text-xs uppercase tracking-widest text-stone-400 mb-1">D1.1 · 통합 방식</p>
+      <h4 class="font-semibold text-base mb-1">어댑터를 어디에 두어야 하는가?</h4>
+      <p class="text-sm text-stone-500 mb-3">기존 클라이언트 코드를 deprecate 할 것인지, 삭제할 것인지 결정합니다.</p>
+      <div class="space-y-2">
+        <label class="opt-card flex items-start gap-3 border border-stone-200 rounded-xl p-3 cursor-pointer">
+          <input type="radio" name="demo_d1_1" value="a" checked class="hidden">
+          <span class="opt-marker"></span>
+          <span>
+            <span class="text-sm"><strong>(a)</strong> 새 <code class="code">SymPyAdapter</code> 클래스로 통합, legacy 삭제<span class="recommended">권장</span></span>
+            <div class="trade-off">장점: 단일 진실 원천. 단점: 단기 마이그레이션 비용 발생.</div>
+          </span>
+        </label>
+        <label class="opt-card flex items-start gap-3 border border-stone-200 rounded-xl p-3 cursor-pointer">
+          <input type="radio" name="demo_d1_1" value="b" class="hidden">
+          <span class="opt-marker"></span>
+          <span>
+            <span class="text-sm"><strong>(b)</strong> legacy를 <code class="code">SymPyAdapter</code>로 리다이렉트</span>
+            <div class="trade-off">장점: 즉각 무중단. 단점: 중복 레이어 영구화, 삭제 시점 불명확.</div>
+          </span>
+        </label>
+        <label class="opt-card flex items-start gap-3 border border-stone-200 rounded-xl p-3 cursor-pointer">
+          <input type="radio" name="demo_d1_1" value="c" class="hidden">
+          <span class="opt-marker"></span>
+          <span>
+            <span class="text-sm"><strong>(c)</strong> 현상 유지 (두 클라이언트 병존)</span>
+            <div class="trade-off">장점: 변경 없음. 단점: v1 폐기 후 런타임 오류 직접 노출.</div>
+          </span>
+        </label>
+      </div>
+      <div class="panel-why p-3 rounded-xl mt-4">
+        <p class="panel-label">WHY — (a) 권장</p>
+        <p class="text-sm text-stone-700 mt-1">
+          <strong>Deletion test:</strong> legacy_client.py를 삭제해도 도메인 동작이 유지되어야 합니다.
+          옵션 (a)는 어댑터가 그 계약을 흡수하므로 삭제 테스트를 통과합니다.
+          (b)는 중간 레이어를 추가하지만 "언제 지울 것인가"를 미결로 둡니다.
+          v1 폐기 기한이 명확하므로 지금 결정하는 것이 타당합니다.
+        </p>
+      </div>
+      <textarea name="demo_d1_1_note" rows="2" placeholder="메모 (선택)" class="mt-3 w-full border border-stone-200 rounded-lg p-2 text-sm code resize-none focus:outline-none focus:ring-1 focus:ring-emerald-400"></textarea>
+    </div>
+
+    <!-- SIDE EFFECTS panel -->
+    <div class="panel-note p-4 rounded-xl">
+      <p class="panel-label">SIDE EFFECTS — 결정 확정 시 같이 처리</p>
+      <ul class="list-disc list-inside text-sm text-stone-700 mt-2 space-y-1">
+        <li>CONTEXT.md 추가 — <code class="code">SymPyAdapter</code>, <code class="code">v1-deprecation</code></li>
+        <li>ADR 후보 — D1.1 (외부 API 버전 전환 정책)</li>
+        <li>테스트 계약 — <code class="code">tests/test_sympy.py</code> mock 통합, 중복 18줄 제거</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Sticky-bar demo (static, visual only) -->
+  <div class="bg-stone-900 text-stone-50 rounded-2xl p-5 border border-stone-700">
+    <div class="flex items-center justify-between gap-4 flex-wrap">
+      <div>
+        <p class="text-xs uppercase tracking-widest text-stone-400 mb-0.5">스티키 하단 바</p>
+        <p class="text-sm text-stone-300">폼을 채운 뒤 <strong>"결정 텍스트 생성"</strong>을 눌러 클립보드로 복사합니다.</p>
+      </div>
+      <div class="flex gap-2">
+        <button type="button" id="demo-generate" class="bg-emerald-500 hover:bg-emerald-400 text-white px-4 py-2 rounded-lg font-semibold text-sm">결정 텍스트 생성</button>
+        <button type="button" id="demo-copy" class="bg-stone-700 hover:bg-stone-600 text-white px-4 py-2 rounded-lg font-semibold text-sm">클립보드로 복사</button>
+      </div>
+    </div>
+    <textarea id="demo-output" rows="4" readonly
+      class="w-full mt-4 bg-stone-950 text-stone-300 rounded-lg p-3 border border-stone-700 code text-xs resize-none focus:outline-none"
+      placeholder="결정 텍스트 생성 버튼을 누르면 여기에 마크다운이 나타납니다."></textarea>
+  </div>
+</section>
+
+<hr class="section-rule max-w-5xl mx-auto" />
+
+<!-- ====== THE FIVE PANELS ====== -->
+<section class="max-w-5xl mx-auto px-6 pb-16" id="panels">
+  <p class="sec-label">패널 규칙</p>
+  <h2 class="text-2xl font-bold mb-2">다섯 가지 패널</h2>
+  <p class="text-stone-500 text-sm mb-8">
+    모든 결정 카드는 색상으로 구분된 패널을 사용합니다. 좌측 테두리 색상이 패널 종류를 나타냅니다.
+  </p>
+  <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div class="panel-facts p-4 rounded-xl">
+      <p class="panel-label">FACTS</p>
+      <p class="text-sm text-stone-700 mt-2 font-semibold">회색 좌측 테두리</p>
+      <p class="text-sm text-stone-600 mt-1">파일 경로 + 라인 번호, 실제 상수·SQL·DTO 목록, 이 후보를 유발한 마찰 신호.</p>
+    </div>
+    <div class="panel-why p-4 rounded-xl">
+      <p class="panel-label">WHY — 권장 근거</p>
+      <p class="text-sm text-stone-700 mt-2 font-semibold">녹색 좌측 테두리</p>
+      <p class="text-sm text-stone-600 mt-1">권장 옵션이 왜 우선인가. Deletion test, LANGUAGE.md 원칙, 미래 결합도(coupling)를 인용.</p>
+    </div>
+    <div class="panel-note p-4 rounded-xl">
+      <p class="panel-label">SIDE EFFECTS</p>
+      <p class="text-sm text-stone-700 mt-2 font-semibold">노란색 좌측 테두리</p>
+      <p class="text-sm text-stone-600 mt-1">이 결정이 확정될 때 함께 처리할 것. CONTEXT.md 추가 용어, ADR 후보, 하위 테스트·계약 영향.</p>
+    </div>
+    <div class="panel-context p-4 rounded-xl">
+      <p class="panel-label">CONTEXT</p>
+      <p class="text-sm text-stone-700 mt-2 font-semibold">보라색 좌측 테두리</p>
+      <p class="text-sm text-stone-600 mt-1">도메인 맥락 참조. CONTEXT.md 발췌, ADR 링크, 관련 용어집(glossary) 항목.</p>
+    </div>
+    <div class="bg-white border border-stone-200 p-4 rounded-xl" style="border-left:3px solid #ef4444">
+      <p class="panel-label" style="color:#991b1b">BEFORE 다이어그램</p>
+      <p class="text-sm text-stone-700 mt-2 font-semibold">빨간색 좌측 테두리</p>
+      <p class="text-sm text-stone-600 mt-1">현재 코드 구조. Mermaid flowchart TB, mmdc 검증 필수.</p>
+    </div>
+    <div class="bg-white border border-stone-200 p-4 rounded-xl" style="border-left:3px solid #10b981">
+      <p class="panel-label" style="color:#065f46">AFTER 다이어그램</p>
+      <p class="text-sm text-stone-700 mt-2 font-semibold">녹색 좌측 테두리</p>
+      <p class="text-sm text-stone-600 mt-1">목표 구조. Before와 나란히 배치(2-column grid). 단순하고 안전한 Mermaid 부분집합 사용.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="section-rule max-w-5xl mx-auto" />
+
+<!-- ====== MERMAID VALIDATION GATE ====== -->
+<section class="max-w-5xl mx-auto px-6 pb-16" id="validation">
+  <p class="sec-label">검증 게이트</p>
+  <h2 class="text-2xl font-bold mb-2">Mermaid 검증 — 렌더 실패가 사용자에게 도달하지 않음</h2>
+  <p class="text-stone-500 text-sm mb-6">
+    HTML 파일을 쓰기 전에 모든 Mermaid 블록을 <code class="code text-stone-700">mmdc</code>로 검증합니다.
+    실패하면 <code class="code text-stone-700">MERMAID-SAFE-SUBSET.md</code>를 다시 읽고 수정한 뒤 재실행합니다.
+    모든 블록이 SVG를 출력할 때만 HTML을 확정합니다.
+  </p>
+  <pre class="code-block"><span class="comment"># 1) 초안 HTML을 임시 경로에 먼저 씁니다</span>
+DRAFT=<span class="hl">/tmp/grill-decisions-draft.html</span>
+
+<span class="comment"># 2) 모든 mermaid 블록 추출</span>
+python3 - &lt;&lt;'PY'
+import re, os
+src = open('<span class="hl">/tmp/grill-decisions-draft.html</span>').read()
+blocks = re.findall(r'&lt;div class="mermaid"&gt;\n(.*?)\n\s*&lt;/div&gt;', src, re.DOTALL)
+out = '/tmp/mermaid-validate'
+os.makedirs(out, exist_ok=True)
+for i, b in enumerate(blocks, 1):
+    open(f'{out}/d{i:02d}.mmd', 'w').write(b.strip() + '\n')
+print(f'extracted {len(blocks)} blocks')
+PY
+
+<span class="comment"># 3) 각 블록 렌더링 — mmdc는 오류 시 비정상 종료</span>
+cd /tmp/mermaid-validate &amp;&amp; for f in d*.mmd; do
+  echo "=== $f ==="
+  npx --yes -p @mermaid-js/mermaid-cli mmdc -q -i "$f" -o "${f%.mmd}.svg" 2&gt;&amp;1 \
+    | grep -Ei 'error|syntax|parse|warn' | head -5
+done
+
+<span class="comment"># 4) SVG 개수 = 추출 블록 개수 확인</span>
+ls /tmp/mermaid-validate/*.svg 2&gt;&amp;1 | wc -l   <span class="comment"># 추출 수와 같아야 함</span></pre>
+  <div class="panel-note p-4 rounded-xl mt-5">
+    <p class="panel-label">Mermaid 안전 부분집합 — 주요 금지 패턴</p>
+    <ul class="list-disc list-inside text-sm text-stone-700 mt-2 space-y-1">
+      <li>레이블 안에 파이프 <code class="code">|</code> 사용 금지</li>
+      <li>더블쿼트 레이블 안에 싱글쿼트 <code class="code">'</code> 사용 금지</li>
+      <li>HTML 엔티티 (<code class="code">&amp;gt;</code>, <code class="code">&amp;lt;</code>) 사용 금지 — 리터럴 문자 사용</li>
+      <li>실린더 <code class="code">[(...)]</code> 레이블은 단일 행만 허용</li>
+      <li>멀티워드 엣지 레이블은 반드시 더블쿼트로 감싸기</li>
+    </ul>
+  </div>
+</section>
+
+<hr class="section-rule max-w-5xl mx-auto" />
+
+<!-- ====== INSTALL + TRIGGERS ====== -->
+<section class="max-w-5xl mx-auto px-6 pb-16" id="install">
+  <p class="sec-label">설치 + 트리거</p>
+  <h2 class="text-2xl font-bold mb-2">설치</h2>
+  <p class="text-stone-500 text-sm mb-6">
+    Node.js + npx가 필요합니다 (Mermaid 검증용). 첫 실행 시 <code class="code text-stone-700">@mermaid-js/mermaid-cli</code>를 자동 설치합니다.
+    <code class="code text-stone-700">grill-with-docs</code> 스킬도 함께 필요합니다.
+  </p>
+  <pre class="code-block"><span class="comment"># 이 스킬 설치</span>
+git clone https://github.com/cskwork/grill-with-docs-html ~/.claude/skills/grill-with-docs-html
+
+<span class="comment"># grill-with-docs 가 없다면</span>
+git clone https://github.com/obra/grill-with-docs ~/.claude/skills/grill-with-docs</pre>
+
+  <h3 class="text-lg font-bold mt-8 mb-4">트리거 키워드</h3>
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm border border-stone-200 rounded-xl overflow-hidden">
+      <thead>
+        <tr class="bg-stone-100">
+          <th class="px-4 py-2.5 text-left font-semibold text-stone-600 text-xs uppercase tracking-wider">언어</th>
+          <th class="px-4 py-2.5 text-left font-semibold text-stone-600 text-xs uppercase tracking-wider">키워드</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-stone-100">
+        <tr>
+          <td class="px-4 py-3 text-stone-600 font-medium">한국어</td>
+          <td class="px-4 py-3">
+            <span class="file-chip bg-stone-100 px-2 py-0.5 rounded mr-1">"그릴링"</span>
+            <span class="file-chip bg-stone-100 px-2 py-0.5 rounded mr-1">"디자인 결정"</span>
+            <span class="file-chip bg-stone-100 px-2 py-0.5 rounded mr-1">"결정 폼"</span>
+            <span class="file-chip bg-stone-100 px-2 py-0.5 rounded">"후보 그릴링"</span>
+          </td>
+        </tr>
+        <tr>
+          <td class="px-4 py-3 text-stone-600 font-medium">English</td>
+          <td class="px-4 py-3">
+            <span class="file-chip bg-stone-100 px-2 py-0.5 rounded mr-1">"grilling"</span>
+            <span class="file-chip bg-stone-100 px-2 py-0.5 rounded mr-1">"design decision"</span>
+            <span class="file-chip bg-stone-100 px-2 py-0.5 rounded mr-1">"decision form"</span>
+            <span class="file-chip bg-stone-100 px-2 py-0.5 rounded">"grill candidates"</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<hr class="section-rule max-w-5xl mx-auto" />
+
+<!-- ====== RELATION TO GRILL-WITH-DOCS ====== -->
+<section class="max-w-5xl mx-auto px-6 pb-16" id="relation">
+  <p class="sec-label">구조</p>
+  <h2 class="text-2xl font-bold mb-2">grill-with-docs 와의 관계</h2>
+  <p class="text-stone-500 text-sm mb-6">
+    이 스킬은 <code class="code text-stone-700">grill-with-docs</code>를 대체하지 않고 보완합니다.
+    인터뷰 행동(CONTEXT.md 발견, ADR 제안, 용어 다듬기)은 상위 스킬을 그대로 재사용하고,
+    이 스킬의 파일들은 HTML 내보내기 레이어만 담당합니다.
+  </p>
+  <div class="mermaid max-w-2xl">flowchart TB
+  GWD["grill-with-docs<br/>부모 스킬"]
+  GWD -- "인터뷰 행동 재사용" --> GWDH["grill-with-docs-html<br/>HTML 내보내기 레이어"]
+  GWDH --> HF["HTML-FORM.md<br/>폼 템플릿"]
+  GWDH --> MS["MERMAID-SAFE-SUBSET.md<br/>안전 부분집합"]
+  GWDH --> VL["VALIDATION.md<br/>mmdc 검증 게이트"]
+  GWD --> SK["SKILL.md<br/>인터뷰 진입점"]
+  classDef parent fill:#f5f3ff,stroke:#8b5cf6
+  classDef child fill:#ecfdf5,stroke:#10b981
+  classDef file fill:#fafaf9,stroke:#a8a29e
+  class GWD parent
+  class GWDH child
+  class HF,MS,VL,SK file</div>
+</section>
+
+<hr class="section-rule max-w-5xl mx-auto" />
+
+<!-- ====== FILE MAP ====== -->
+<section class="max-w-5xl mx-auto px-6 pb-16" id="files">
+  <p class="sec-label">파일 구성</p>
+  <h2 class="text-2xl font-bold mb-6">파일 맵</h2>
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm border border-stone-200 rounded-xl overflow-hidden">
+      <thead>
+        <tr class="bg-stone-100">
+          <th class="px-4 py-2.5 text-left font-semibold text-stone-600 text-xs uppercase tracking-wider">파일</th>
+          <th class="px-4 py-2.5 text-left font-semibold text-stone-600 text-xs uppercase tracking-wider">역할</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-stone-100">
+        <tr>
+          <td class="px-4 py-3"><code class="code text-stone-700">SKILL.md</code></td>
+          <td class="px-4 py-3 text-stone-600">스킬 진입점 — 인터뷰 순서, HTML 내보내기 조건, skip 규칙</td>
+        </tr>
+        <tr>
+          <td class="px-4 py-3"><code class="code text-stone-700">HTML-FORM.md</code></td>
+          <td class="px-4 py-3 text-stone-600">자체 완결 HTML 폼 템플릿 (Tailwind CDN, Mermaid CDN, Pretendard 폰트)</td>
+        </tr>
+        <tr>
+          <td class="px-4 py-3"><code class="code text-stone-700">MERMAID-SAFE-SUBSET.md</code></td>
+          <td class="px-4 py-3 text-stone-600">mmdc 렌더링 안전 부분집합 — 금지 패턴 목록 및 허용 문법</td>
+        </tr>
+        <tr>
+          <td class="px-4 py-3"><code class="code text-stone-700">VALIDATION.md</code></td>
+          <td class="px-4 py-3 text-stone-600">Mermaid 블록 추출·검증 스니펫 (mmdc 파이프라인)</td>
+        </tr>
+        <tr>
+          <td class="px-4 py-3"><code class="code text-stone-700">README.md</code></td>
+          <td class="px-4 py-3 text-stone-600">설치, 트리거, 파일 구성 요약</td>
+        </tr>
+        <tr>
+          <td class="px-4 py-3"><code class="code text-stone-700">LICENSE</code></td>
+          <td class="px-4 py-3 text-stone-600">MIT 라이선스</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ====== FOOTER ====== -->
+<footer class="bg-stone-100 border-t border-stone-200 mt-4">
+  <div class="max-w-5xl mx-auto px-6 py-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div>
+      <p class="font-mono text-sm font-bold text-stone-700 mb-1">grill-with-docs-html</p>
+      <p class="text-xs text-stone-400">
+        MIT License &mdash;
+        <a href="https://github.com/cskwork/grill-with-docs-html" class="underline hover:text-stone-700">github.com/cskwork/grill-with-docs-html</a>
+      </p>
+      <p class="text-xs text-stone-400 mt-0.5">
+        <em>grill-with-docs</em> HTML form layer by <a href="https://github.com/cskwork" class="underline hover:text-stone-700">cskwork</a>.
+        Built on <a href="https://github.com/obra/grill-with-docs" class="underline hover:text-stone-700">grill-with-docs</a> by obra.
+      </p>
+    </div>
+    <a href="https://github.com/cskwork/grill-with-docs-html" target="_blank" rel="noopener"
+       class="text-xs font-semibold bg-stone-900 text-white px-4 py-2 rounded-lg hover:bg-stone-700 transition-colors whitespace-nowrap">
+      GitHub에서 보기
+    </a>
+  </div>
+</footer>
+
+<script>
+/* Install copy button */
+document.getElementById('copy-install').addEventListener('click', async () => {
+  const cmd = 'git clone https://github.com/cskwork/grill-with-docs-html ~/.claude/skills/grill-with-docs-html';
+  try {
+    await navigator.clipboard.writeText(cmd);
+  } catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = cmd;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  }
+  const confirm = document.getElementById('copy-confirm');
+  confirm.style.opacity = '1';
+  setTimeout(() => { confirm.style.opacity = '0'; }, 2500);
+});
+
+/* Demo generate/copy buttons */
+function buildDemoDecision() {
+  const r = document.querySelector('input[name="demo_d1_1"]:checked');
+  const val = r ? r.value : 'a';
+  const labels = { a: '(a) 새 SymPyAdapter 클래스로 통합, legacy 삭제', b: '(b) legacy를 SymPyAdapter로 리다이렉트', c: '(c) 현상 유지' };
+  const note = document.querySelector('textarea[name="demo_d1_1_note"]').value.trim();
+  const lines = [
+    '# 결정',
+    '',
+    '## C01 — Sympy 클라이언트 통합',
+    `- **D1.1** — ${labels[val] || val}`,
+    note ? `  - 메모: ${note}` : null,
+    '',
+    '— 위 결정대로 진행해줘.'
+  ].filter(l => l !== null);
+  return lines.join('\n');
+}
+
+document.getElementById('demo-generate').addEventListener('click', () => {
+  document.getElementById('demo-output').value = buildDemoDecision();
+});
+
+document.getElementById('demo-copy').addEventListener('click', async () => {
+  const out = document.getElementById('demo-output');
+  if (!out.value.trim()) out.value = buildDemoDecision();
+  try {
+    await navigator.clipboard.writeText(out.value);
+    const btn = document.getElementById('demo-copy');
+    const orig = btn.textContent;
+    btn.textContent = '복사됨';
+    setTimeout(() => { btn.textContent = orig; }, 1200);
+  } catch (e) {
+    out.select();
+    document.execCommand('copy');
+  }
+});
+</script>
+</body>
+</html>
