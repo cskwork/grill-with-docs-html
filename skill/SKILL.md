@@ -1,6 +1,6 @@
 ---
 name: grill-with-docs-html
-description: Default grilling workflow — same Socratic interview as grill-with-docs (challenges plan against CONTEXT.md / ADRs, sharpens terminology, updates docs inline) but ALWAYS exports the resolved decision tree as an interactive HTML form with FACTS panels, option trade-offs, WHY-recommended panels, Before/After Mermaid diagrams (mmdc-validated), and a sticky "generate decision text" + clipboard copy button. Use whenever the user wants to stress-test a plan, walk a design tree with structured decisions, or pick between candidate refactors. Korean triggers: "그릴링", "디자인 결정", "결정 폼", "후보 그릴링".
+description: Use when the user wants to stress-test a plan, walk a structured design decision tree, compare candidate refactors, or needs a grill-with-docs session exported as an interactive HTML decision form. Korean triggers include 그릴링, 디자인 결정, 결정 폼, 후보 그릴링.
 ---
 
 <what-to-do>
