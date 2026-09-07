@@ -1,6 +1,6 @@
 ---
 name: grill-with-docs-html
-description: Grilling session that walks the design decision tree Socratically and exports it as a self-contained interactive HTML decision form. Use when the user wants to stress-test a plan, compare candidate refactors, or wants a grill-with-docs session exported as a reviewable, overridable form. Korean triggers include 그릴링, 디자인 결정, 결정 폼, 후보 그릴링.
+description: Grilling session that walks the design decision tree Socratically and exports it as a self-contained interactive HTML decision form. Use when the user wants a design interview or existing decisions exported as a reviewable HTML decision form; ordinary plan discussion does not require this export workflow.
 ---
 
 <what-to-do>
@@ -11,12 +11,12 @@ Run the grilling interview exactly as [`grill-with-docs`](../grill-with-docs/SKI
 
 Order of operations:
 
-1. Run the interview (see `../grill-with-docs/SKILL.md`).
+1. Run the interview when needed (see `../grill-with-docs/SKILL.md`); use existing agreed decisions directly when the user requests export only.
 2. As decisions land, keep a mental ledger of: candidate id, decision id, options, trade-offs, recommended option, the "why" reasoning, side effects.
 3. Draft Before/After Mermaid diagrams for each candidate (current shape vs. deepened shape) — read `MERMAID-SAFE-SUBSET.md` before writing the first diagram.
 4. **Validate every Mermaid block with mmdc BEFORE writing the HTML.** Read `VALIDATION.md` for the extract-and-render snippet and run it — an unrendered block shows the user a syntax error instead of a diagram.
 5. Write the HTML using the template in `HTML-FORM.md` to `$TMPDIR/grill-decisions-<YYYYMMDD-HHMMSS>.html` (fallback `/tmp`), then open it (see **File location**).
-6. Wait for the user's pasted decision text. Then proceed with implementation.
+6. Return the form for review. Pasted choices record decisions; implement only when the user also authorizes implementation, and do not re-ask for authorization already given for the unchanged scope.
 
 </what-to-do>
 
@@ -31,7 +31,7 @@ This skill reuses the entirety of `grill-with-docs`:
 - Inline `CONTEXT.md` updates via `../grill-with-docs/CONTEXT-FORMAT.md`
 - ADR offers via `../grill-with-docs/ADR-FORMAT.md` (only when hard-to-reverse + surprising + real trade-off)
 
-Read those files for the interview behaviour; this skill's bundled files only cover the HTML export layer. If `../grill-with-docs/` is absent, tell the user it is missing before starting — the interview behaviour lives there, not here.
+Read those files for the interview behaviour; this skill's bundled files only cover the HTML export layer. For the interview, resolve the installed `grill-with-docs` skill path; do not assume it is beside a symlink target. If unavailable, report the missing interview dependency. Export-only requests can use the supplied decisions and bundled HTML guidance without that dependency.
 
 ## HTML form requirements (must all be present)
 
@@ -65,9 +65,9 @@ Write to the OS temp dir so nothing lands in the repo — `$TMPDIR` on macOS / L
 
 ## When to skip the HTML export
 
-- The decision tree has fewer than 3 structured decisions (just answer inline)
+- The decision tree has fewer than 3 structured decisions and the user did not explicitly request an HTML form (answer inline)
 - The user explicitly asks to keep grilling in chat ("just answer me here", "skip the form")
-- No diagram makes sense for the topic (pure naming debates, conventions)
+- No diagram makes sense and no form was requested; for an explicit form request, omit irrelevant diagrams and preserve the decision panels
 
 In all other grilling sessions, the HTML export is the default.
 
